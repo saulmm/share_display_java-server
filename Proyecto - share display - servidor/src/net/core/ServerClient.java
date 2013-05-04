@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -15,8 +16,8 @@ import net.listeners.GameListener;
 
 public class ServerClient implements Runnable, GameListener {
 	private ArrayList<ClientListener> clientListeners;
-	private DataInputStream dis;
-	private DataOutputStream dos;
+	private ObjectInputStream ois;
+	private ObjectOutputStream oos;
 	private Player player;
 	private Socket clientSocket;
 
@@ -77,11 +78,11 @@ public class ServerClient implements Runnable, GameListener {
 
 
 	private void sendResponse(int protocolResponse) {
-		 dos = null;
-		
 		try {
-			dos = new DataOutputStream(clientSocket.getOutputStream());
-			dos.writeInt(protocolResponse);
+			System.out.println("ServerClient.sendResponse() preparing oos");
+			oos = new ObjectOutputStream(clientSocket.getOutputStream());
+			oos.writeObject(protocolResponse);
+			System.out.println("ServerClient.sendResponse() oos sent response");
 			
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -90,12 +91,13 @@ public class ServerClient implements Runnable, GameListener {
 
 	
 	private int getRequest() {
-		dis = null;
 		int request = -1;
 		
 		try {
-			dis = new DataInputStream(clientSocket.getInputStream());
-			request = dis.readInt();
+			System.out.println("ServerClient.getRequest() 0");
+			ois = new ObjectInputStream(clientSocket.getInputStream());
+			request = (int) ois.readObject();
+			System.out.println("ServerClient.getRequest() waitting for request");
 			
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -117,8 +119,9 @@ public class ServerClient implements Runnable, GameListener {
 	@Override
 	public void move(int x, int y) {
 		try {
-			dos.writeInt(x);
-			dos.writeInt(y);
+			oos.reset();
+			oos.writeObject(x);
+			oos.writeObject(y);
 
 		} catch (IOException e) {
 			e.printStackTrace();
