@@ -6,12 +6,16 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import main.core.Items;
 
 
 public class ServerConnection implements Runnable {
 	private boolean running;
 	private ServerSocket serverSocket;
+	private final Logger log = LoggerFactory.getLogger(ServerSocket.class);
 	public ServerConnection() {
 	}
 	
@@ -19,13 +23,13 @@ public class ServerConnection implements Runnable {
 	public void run() {
 		try {
 			serverSocket = new ServerSocket(Items.PORT);
-			System.out.println("Server.run() server created...");
+			log.info("Server created");
 			Game mainGame = new Game();
 			
 			while(running) {
-				System.out.println("Server.run() waiting for client");
 				Socket clientSocket = serverSocket.accept();
 				ServerClient client = new ServerClient(clientSocket);
+				log.info("Client connected : "+clientSocket.getInetAddress().toString());
 				mainGame.addGameListener(client);
 				client.addClientListener(mainGame);
 			}

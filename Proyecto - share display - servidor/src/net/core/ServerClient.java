@@ -1,12 +1,13 @@
 package net.core;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import main.core.Protocol;
 import main.entities.Player;
@@ -16,6 +17,7 @@ import net.listeners.GameListener;
 
 public class ServerClient implements Runnable, GameListener {
 	private ArrayList<ClientListener> clientListeners;
+	private final Logger log = LoggerFactory.getLogger(ServerClient.class);
 	private ObjectInputStream ois;
 	private ObjectOutputStream oos;
 	private Player player;
@@ -75,14 +77,23 @@ public class ServerClient implements Runnable, GameListener {
 		
 		return player;
 	}
+	
+	private void createStreams() {
+		try {
+			oos = new ObjectOutputStream(clientSocket.getOutputStream());
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
 
 
 	private void sendResponse(int protocolResponse) {
 		try {
-			System.out.println("ServerClient.sendResponse() preparing oos");
-			oos = new ObjectOutputStream(clientSocket.getOutputStream());
+			createStreams();
 			oos.writeObject(protocolResponse);
-			System.out.println("ServerClient.sendResponse() oos sent response");
+			log.info("Response sent");
 			
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -94,10 +105,9 @@ public class ServerClient implements Runnable, GameListener {
 		int request = -1;
 		
 		try {
-			System.out.println("ServerClient.getRequest() 0");
 			ois = new ObjectInputStream(clientSocket.getInputStream());
-			request = (int) ois.readObject();
-			System.out.println("ServerClient.getRequest() waitting for request");
+			request = (Integer) ois.readObject();
+			log.debug("Waitting for the request");
 			
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -119,7 +129,6 @@ public class ServerClient implements Runnable, GameListener {
 	@Override
 	public void move(int x, int y) {
 		try {
-			oos.reset();
 			oos.writeObject(x);
 			oos.writeObject(y);
 
